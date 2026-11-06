@@ -13,7 +13,7 @@ let package = Package(
             targets: ["MdocSecurity18013"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/eu-digital-identity-wallet/eudi-lib-ios-iso18013-data-model.git", from: "0.27.2"),
+        .package(url: "https://github.com/eu-digital-identity-wallet/eudi-lib-ios-iso18013-data-model.git", from: "0.28.1"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.13.1"),
         .package(url: "https://github.com/apple/swift-certificates.git", .upToNextMajor(from: "1.0.0")),
 		.package(url: "https://github.com/apple/swift-docc-plugin", from: "1.5.0"),
@@ -42,8 +42,8 @@ let package = Package(
         ),
         .binaryTarget(
             name: "EudiEtsi1196x2",
-            url: "https://github.com/eu-digital-identity-wallet/eudi-lib-kmp-etsi-1196x2/releases/download/v0.4.0-alpha.3/EudiEtsi1196x2.xcframework.zip",
-            checksum: "f8bb43a93e4dcd0555f9791edc75a2817b1d344ad0c3b4cf9550ee09dcbd730c"
+            url: "https://github.com/eu-digital-identity-wallet/eudi-lib-kmp-etsi-1196x2/releases/download/v0.5.0-alpha.1/EudiEtsi1196x2.xcframework.zip",
+            checksum: "977db42573b717dc42a53341075d2fa01327948287c3b1ff704f8a913aed6e17"
         )
     ]
 )

@@ -31,6 +31,11 @@ public struct EtsiTrustSource: @unchecked Sendable {
     /// Optional custom JWT signature verifier for LoTE JWTs; when `nil`, the core uses
     /// its built-in verifier.
     public let customJwtSignatureVerifier: (any VerifyJwtSignature)?
+    /// Optional custom LoTE loader; when `nil`, the core fetches each LoTE with the built-in
+    /// downloader. Use it to fetch LoTEs through your own HTTP stack or to serve locally
+    /// persisted copies (e.g. for offline proximity presentation). Whatever the loader returns
+    /// still goes through JWT signature verification and expiry checks.
+    public let loadLoTE: (any IosLoadLoTE)?
     /// Controls whether additional LoTE pointers are followed.
     public let loteConstraints: any LoadLoTEAndPointersConstraints
 
@@ -40,23 +45,52 @@ public struct EtsiTrustSource: @unchecked Sendable {
     /// `cacheTtlHours` expressed in hours, for the `EudiwIosTrust.cached(ttlHours:)` boundary.
     public let cacheTtlHours: Double
 
-    /// Whether PKIX certificate validation checks revocation. Defaults to `false`.
-    public let isRevocationEnabled: Bool
+    /// How PKIX certificate validation checks revocation.
+    public let revocationPolicy: PkixRevocationPolicy
+
+    /// Whether PKIX certificate validation checks revocation.
+    @available(*, deprecated, message: "Use revocationPolicy instead")
+    public var isRevocationEnabled: Bool { revocationPolicy.isEnabled }
 
     public init(
         loteLocations: SupportedLists<NSString>,
         contextTypeMappings: EtsiContextTypeMappings? = nil,
         cacheTtlHours: TimeInterval = EtsiTrustSource.defaultCacheTtlHours,
         customJwtSignatureVerifier: (any VerifyJwtSignature)? = nil,
+        loadLoTE: (any IosLoadLoTE)? = nil,
         loteConstraints: any LoadLoTEAndPointersConstraints = LoadLoTEAndPointersConstraintsDoNotLoadOtherPointers.shared,
-        isRevocationEnabled: Bool
+        revocationPolicy: PkixRevocationPolicy = .crlPriority
     ) {
         self.loteLocations = loteLocations
         self.contextTypeMappings = contextTypeMappings
         self.cacheTtlHours = cacheTtlHours
         self.customJwtSignatureVerifier = customJwtSignatureVerifier
+        self.loadLoTE = loadLoTE
         self.loteConstraints = loteConstraints
-        self.isRevocationEnabled = isRevocationEnabled
+        self.revocationPolicy = revocationPolicy
+    }
+
+    /// Creates a source from the legacy revocation flag: `true` checks revocation with OCSP only
+    /// (`.ocspOnly`), `false` disables it (`.disabled`).
+    @available(*, deprecated, message: "Use init(loteLocations:contextTypeMappings:cacheTtlHours:customJwtSignatureVerifier:loadLoTE:loteConstraints:revocationPolicy:) instead")
+    public init(
+        loteLocations: SupportedLists<NSString>,
+        contextTypeMappings: EtsiContextTypeMappings? = nil,
+        cacheTtlHours: TimeInterval = EtsiTrustSource.defaultCacheTtlHours,
+        customJwtSignatureVerifier: (any VerifyJwtSignature)? = nil,
+        loadLoTE: (any IosLoadLoTE)? = nil,
+        loteConstraints: any LoadLoTEAndPointersConstraints = LoadLoTEAndPointersConstraintsDoNotLoadOtherPointers.shared,
+        isRevocationEnabled: Bool
+    ) {
+        self.init(
+            loteLocations: loteLocations,
+            contextTypeMappings: contextTypeMappings,
+            cacheTtlHours: cacheTtlHours,
+            customJwtSignatureVerifier: customJwtSignatureVerifier,
+            loadLoTE: loadLoTE,
+            loteConstraints: loteConstraints,
+            revocationPolicy: PkixRevocationPolicy(isRevocationEnabled: isRevocationEnabled)
+        )
     }
 }
 
@@ -74,7 +108,7 @@ extension EtsiTrustSource {
                 wrpacProviders: EUDIRefImplLists.wrpacProviders as NSString,
                 wrprcProviders: EUDIRefImplLists.wrprcProviders as NSString,
                 pubEaaProviders: EUDIRefImplLists.pubEaaProviders as NSString,
-                qeaProviders: nil, eaaProviders: [:]), isRevocationEnabled: false
+                qeaProviders: nil, eaaProviders: [:]), revocationPolicy: .disabled
         )
     }
 }
